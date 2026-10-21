@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de edad</title>
+</head>
+<body>
+    <h1>{{ mensaje }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label for="edad">Tu edad:</label>
+        <input type="text" id="edad" name="edad" value ="{{ edad }}">
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    {% if resultado %}
+        <p>El próximo año tendrás {{ resultado }} años.</p>
+    {% endif %}
+
+</body>
+</html>
