@@ -56,7 +56,7 @@ def datos(request):
     try:
         edad = int(edad)
     except ValueError:
-        return JsonResponse({"error": "La edad debe ser un entero."})
+        return JsonResponse({"error": "La edad debe ser un entero."}, status = 400)
 
     return JsonResponse({
         "nombre": nombre,
