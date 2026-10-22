@@ -76,6 +76,13 @@ def calcular_edad(request):
             return JsonResponse({"error": "Se esperaba un objeto JSON"}, status=400)
         
         edad_recibida = datos.get("edad")
+
+        if type(edad_recibida) is not int:
+            return JsonResponse({"error": "la edad debe ser un número entero"}, status=400)
+
+        if not 1 <= edad_recibida <= 120:
+            return JsonResponse({"error": "La edad debe ser un entero entre 1 y 120"}, status=400)
+
         return JsonResponse({"edad": edad_recibida})
 
     return HttpResponseNotAllowed(["POST"])
