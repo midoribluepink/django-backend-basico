@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.http import JsonResponse
+import json
 
 def hola(request):
     edad = request.GET.get("edad")
@@ -62,3 +63,19 @@ def datos(request):
         "nombre": nombre,
         "edad": edad
     })
+
+def calcular_edad(request):
+    if request.method == "POST":
+
+        try:
+            datos = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+
+        if not isinstance(datos, dict):
+            return JsonResponse({"error": "Se esperaba un objeto JSON"}, status=400)
+        
+        edad_recibida = datos.get("edad")
+        return JsonResponse({"edad": edad_recibida})
+
+    return HttpResponseNotAllowed(["POST"])
