@@ -142,11 +142,69 @@ def listar_libros(request):
     return HttpResponseNotAllowed(["GET", "POST"])
 
 def detalle_libro(request, id):
-    if request.method == "GET":
-        libro = next((d for d in libros if d["id"]== id), None)
-        if libro is not None:
-            return JsonResponse(libro)
-        
+
+    if request.method not in ["GET", "PATCH", "PUT"]:
+        return HttpResponseNotAllowed(["GET", "PATCH", "PUT"])
+
+    libro = next((d for d in libros if d["id"] == id), None)
+
+    if libro is None:
         return JsonResponse({"error": "Libro no encontrado"}, status=404)
 
-    return HttpResponseNotAllowed(["GET"])
+    if request.method == "GET":
+        return JsonResponse(libro)
+
+    if request.method in ["PATCH", "PUT"]:
+
+        try:
+            libro_nuevo = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+
+        if not isinstance(libro_nuevo, dict):
+            return JsonResponse({"error": "Tipo de dato equivocado, se espera un diccionario."}, status=400)
+
+        if not libro_nuevo:
+            return JsonResponse({"error": "El diccionario está vacío"}, status=400)
+
+        campos_permitidos = {"titulo", "autor"}
+        campos_recibidos = set(libro_nuevo.keys())
+
+        campos_no_permitidos = campos_recibidos - campos_permitidos
+
+        if campos_no_permitidos:
+            return JsonResponse({"error": "Campos no permitidos."}, status=400)
+
+        if request.method == "PUT" and campos_recibidos != campos_permitidos:
+            return JsonResponse({"error": "Campos incompletos."}, status=400)
+
+        if "titulo" in libro_nuevo:
+            titulo_nuevo = libro_nuevo["titulo"]
+
+            if not isinstance(titulo_nuevo, str):
+                return JsonResponse({"error": "El título tiene que ser un str."}, status=400)
+
+            titulo_nuevo = titulo_nuevo.strip()
+
+            if not titulo_nuevo:
+                return JsonResponse({"error": "El campo de título está vacío."}, status=400)
+
+        if "autor" in libro_nuevo:
+            autor_nuevo = libro_nuevo["autor"]
+
+            if not isinstance(autor_nuevo, str):
+                return JsonResponse({"error": "El autor tiene que ser un str."}, status=400)
+
+            autor_nuevo = autor_nuevo.strip()
+
+            if not autor_nuevo:
+                return JsonResponse({"error": "El campo de autor está vacío."}, status=400)
+
+        if "titulo" in libro_nuevo:
+            libro["titulo"] = titulo_nuevo
+
+        if "autor" in libro_nuevo:
+            libro["autor"] = autor_nuevo
+
+        return JsonResponse(libro)                    
+
