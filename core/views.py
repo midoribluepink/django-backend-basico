@@ -143,13 +143,17 @@ def listar_libros(request):
 
 def detalle_libro(request, id):
 
-    if request.method not in ["GET", "PATCH", "PUT"]:
-        return HttpResponseNotAllowed(["GET", "PATCH", "PUT"])
+    if request.method not in ["GET", "PATCH", "PUT", "DELETE"]:
+        return HttpResponseNotAllowed(["GET", "PATCH", "PUT", "DELETE"])
 
     libro = next((d for d in libros if d["id"] == id), None)
 
     if libro is None:
         return JsonResponse({"error": "Libro no encontrado"}, status=404)
+
+    if request.method == "DELETE":
+        libros.remove(libro)
+        return HttpResponse(status=204)
 
     if request.method == "GET":
         return JsonResponse(libro)
