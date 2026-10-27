@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.http import JsonResponse
+from core.models import Libro
 import json
 
 def hola(request):
@@ -95,7 +96,19 @@ libros = [
 
 def listar_libros(request):
     if request.method == "GET":
-        return JsonResponse(libros, safe = False)
+        libros_db = Libro.objects.all()
+        libros_db_list = []
+
+        for i in libros_db:
+            libros_db_list.append(
+                {
+                    "id": i.id,
+                    "titulo": i.titulo,
+                    "autor": i.autor
+                }
+            )
+
+        return JsonResponse(libros_db_list, safe = False)
 
     if request.method == "POST":
 
@@ -125,19 +138,26 @@ def listar_libros(request):
         titulo = titulo.strip()
         autor = autor.strip()
 
-        if not len(titulo) > 0:
+        if not titulo:
             return JsonResponse({"error": "El campo de título está vacío."}, status=400)
 
-        if not len(autor) > 0:
+        if not autor:
             return JsonResponse({"error": "El campo de autor está vacío."}, status=400)
 
-        indices = [item["id"] for item in libros if "id" in item]
-        nuevo_id = max(indices, default=0) + 1
-        nuevo_libro = {"id": nuevo_id, "titulo": titulo, "autor": autor}
+        if len(titulo) > 200:
+            return JsonResponse({"error": "El título no puede tener más de 200 caracteres."}, status=400)
 
-        libros.append(nuevo_libro)
+        if len(autor) > 100:
+            return JsonResponse({"error": "El autor no puede tener más de 100 caracteres."}, status=400)
 
-        return JsonResponse(nuevo_libro, status=201)
+        nuevo_libro = Libro.objects.create(
+            titulo=titulo,
+            autor=autor
+        )
+
+        nuevo_libro_dict = {"id": nuevo_libro.id, "titulo": titulo, "autor": autor}
+
+        return JsonResponse(nuevo_libro_dict, status=201)
 
     return HttpResponseNotAllowed(["GET", "POST"])
 
