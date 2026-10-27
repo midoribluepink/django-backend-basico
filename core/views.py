@@ -118,19 +118,19 @@ def listar_libros(request):
             return JsonResponse({"error": "JSON inválido"}, status=400)
 
         if not isinstance(libro, dict):
-            return JsonResponse({"error": "Tipo de dato equivocado, se espera un diccionario."}, status=400)
+            return JsonResponse({"error": "Tipo de dato equivocado, se espera un diccionario"}, status=400)
 
         if "titulo" not in libro:
-            return JsonResponse({"error": "Clave título inexistente."}, status=400)
+            return JsonResponse({"error": "Clave título inexistente"}, status=400)
 
         if "autor" not in libro:
-            return JsonResponse({"error": "Clave autor inexistente."}, status=400)
+            return JsonResponse({"error": "Clave autor inexistente"}, status=400)
 
         titulo = libro["titulo"]
         autor = libro["autor"]
 
         if not isinstance(titulo, str):
-            return JsonResponse({"error": "El título tiene que ser un str."}, status=400)
+            return JsonResponse({"error": "El título tiene que ser un str"}, status=400)
 
         if not isinstance(autor, str):
             return JsonResponse({"error": "El autor tiene que ser un str"}, status=400)
@@ -145,10 +145,10 @@ def listar_libros(request):
             return JsonResponse({"error": "El campo de autor está vacío."}, status=400)
 
         if len(titulo) > 200:
-            return JsonResponse({"error": "El título no puede tener más de 200 caracteres."}, status=400)
+            return JsonResponse({"error": "El título no puede tener más de 200 caracteres"}, status=400)
 
         if len(autor) > 100:
-            return JsonResponse({"error": "El autor no puede tener más de 100 caracteres."}, status=400)
+            return JsonResponse({"error": "El autor no puede tener más de 100 caracteres"}, status=400)
 
         nuevo_libro = Libro.objects.create(
             titulo=titulo,
@@ -166,17 +166,19 @@ def detalle_libro(request, id):
     if request.method not in ["GET", "PATCH", "PUT", "DELETE"]:
         return HttpResponseNotAllowed(["GET", "PATCH", "PUT", "DELETE"])
 
-    libro = next((d for d in libros if d["id"] == id), None)
+    libro = Libro.objects.filter(id=id).first()
 
     if libro is None:
         return JsonResponse({"error": "Libro no encontrado"}, status=404)
 
+    libro_dict = {"id": libro.id, "titulo": libro.titulo, "autor": libro.autor}
+
     if request.method == "DELETE":
-        libros.remove(libro)
+        libro.delete()
         return HttpResponse(status=204)
 
     if request.method == "GET":
-        return JsonResponse(libro)
+        return JsonResponse(libro_dict)
 
     if request.method in ["PATCH", "PUT"]:
 
@@ -186,7 +188,7 @@ def detalle_libro(request, id):
             return JsonResponse({"error": "JSON inválido"}, status=400)
 
         if not isinstance(libro_nuevo, dict):
-            return JsonResponse({"error": "Tipo de dato equivocado, se espera un diccionario."}, status=400)
+            return JsonResponse({"error": "Tipo de dato equivocado, se espera un diccionario"}, status=400)
 
         if not libro_nuevo:
             return JsonResponse({"error": "El diccionario está vacío"}, status=400)
@@ -197,38 +199,48 @@ def detalle_libro(request, id):
         campos_no_permitidos = campos_recibidos - campos_permitidos
 
         if campos_no_permitidos:
-            return JsonResponse({"error": "Campos no permitidos."}, status=400)
+            return JsonResponse({"error": "Campos no permitidos"}, status=400)
 
         if request.method == "PUT" and campos_recibidos != campos_permitidos:
-            return JsonResponse({"error": "Campos incompletos."}, status=400)
+            return JsonResponse({"error": "Campos incompletos"}, status=400)
 
         if "titulo" in libro_nuevo:
             titulo_nuevo = libro_nuevo["titulo"]
 
             if not isinstance(titulo_nuevo, str):
-                return JsonResponse({"error": "El título tiene que ser un str."}, status=400)
+                return JsonResponse({"error": "El título tiene que ser un str"}, status=400)
 
             titulo_nuevo = titulo_nuevo.strip()
 
             if not titulo_nuevo:
-                return JsonResponse({"error": "El campo de título está vacío."}, status=400)
+                return JsonResponse({"error": "El campo de título está vacío"}, status=400)
+
+            if len(titulo_nuevo) > 200:
+                return JsonResponse({"error": "El título no puede tener más de 200 caracteres"}, status=400)
 
         if "autor" in libro_nuevo:
             autor_nuevo = libro_nuevo["autor"]
 
             if not isinstance(autor_nuevo, str):
-                return JsonResponse({"error": "El autor tiene que ser un str."}, status=400)
+                return JsonResponse({"error": "El autor tiene que ser un str"}, status=400)
 
             autor_nuevo = autor_nuevo.strip()
 
             if not autor_nuevo:
-                return JsonResponse({"error": "El campo de autor está vacío."}, status=400)
+                return JsonResponse({"error": "El campo de autor está vacío"}, status=400)
+
+            if len(autor_nuevo) > 100:
+                return JsonResponse({"error": "El autor no puede tener más de 100 caracteres"}, status=400)
 
         if "titulo" in libro_nuevo:
-            libro["titulo"] = titulo_nuevo
+            libro.titulo = titulo_nuevo
 
         if "autor" in libro_nuevo:
-            libro["autor"] = autor_nuevo
+            libro.autor = autor_nuevo
 
-        return JsonResponse(libro)                    
+        libro.save()
+
+        libro_dict = {"id": libro.id, "titulo": libro.titulo, "autor": libro.autor}
+
+        return JsonResponse(libro_dict)                    
 
