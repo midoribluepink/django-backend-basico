@@ -89,11 +89,6 @@ def calcular_edad(request):
     return HttpResponseNotAllowed(["POST"])
 
 
-libros = [
-    {"id": 1, "titulo": "El extranjero", "autor": "Albert Camus"},
-    {"id": 2, "titulo": "La metamorfosis", "autor": "Franz Kafka"}
-]
-
 def listar_libros(request):
     if request.method == "GET":
         libros_db = Libro.objects.all()
